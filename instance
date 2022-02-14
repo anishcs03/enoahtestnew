@@ -1,0 +1,71 @@
+# Create VPC using terraform
+resource "aws_vpc" "ownvpc" {
+cidr_block = "0.0.0.0/16"
+instance_tenancy = "default"
+}
+# Two subnet created one public and other is private.
+// public subnet
+resource "aws_subnet" "public" {
+vpc_id = aws_vpc.ownvpc.id
+cidr_block = "192.168.0.0/24"
+availability_zone = "ap-south-1a"
+}
+// private subnet
+resource "aws_subnet" "private" {
+vpc_id = aws_vpc.ownvpc.id
+cidr_block = "0.0.1.0/24"
+availability_zone = "ap-south-1b"
+}
+# Create a public facing internet gateway for connecting VPC/Network with the
+internet world and also attach gateway to VPC
+resource "aws_internet_gateway" "mygateway" {
+vpc_id = aws_vpc.ownvpc.id
+}
+# Create routing table for internet gateway
+resource "aws_route_table" "my_table" {
+vpc_id = aws_vpc.ownvpc.id
+route {
+cidr_block = "0.0.0.0/0"
+gateway_id = aws_internet_gateway.mygateway.id
+}
+}
+resource "aws_route_table_association" "rta_subnet_public" {
+subnet_id = aws_subnet.public.id
+route_table_id = aws_route_table.my_table.id
+}
+# Creating security groups
+resource "aws_security_group" "mywebsecurity" {
+name = "my_web_security"
+description = "Allow http,ssh,icmp"
+vpc_id = aws_vpc.ownvpc.id
+ingress {
+description = "HTTP"
+from_port = 80
+to_port = 80
+protocol = "tcp"
+cidr_blocks = ["0.0.0.0/0"]
+}
+ingress {
+description = "SSH"
+from_port = 22
+to_port = 22
+protocol = "tcp"
+cidr_blocks = ["0.0.0.0/0"]
+}
+ingress {
+description = "MYSQL"
+from_port = 3306
+to_port = 3306
+protocol = "tcp"
+cidr_blocks = ["0.0.0.0/0"]
+}
+egress {
+from_port = 0
+to_port = 0
+protocol = "-1"
+cidr_blocks = ["0.0.0.0/0"]
+}
+tags = {
+Name = "mywebserver_sg"
+}
+}
