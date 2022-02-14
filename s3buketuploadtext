@@ -1,0 +1,18 @@
+Proivder "aws"
+access_key = "access_key"
+secret_key = "secret_key"
+region = "ap-south-1"
+resource "aws_s3_bucket" "mybucket"{
+bucket = "my_test-bucket"
+acl = private"
+tag = {
+Name="bucket created by terraform_anish"
+Environment =Dev"
+}
+}
+resource "aws_s3_bucket_object" "file upload" {
+bucket = "my_bukket"
+key = my bucket_key"
+acl = private"
+source ="home/anish/terraform/interview.txt
+}
