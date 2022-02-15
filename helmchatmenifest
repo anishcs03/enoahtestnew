@@ -1,0 +1,96 @@
+$ sudo apt update && apt -y install docker.io
+Install kubectl
+$ curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s
+https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd6
+4/kubectl && chmod +x ./kubectl && sudo mv ./kubectl /usr/local/bin/kubectl
+Install Minikube
+$ curl -Lo minikube
+https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 &&
+chmod +x minikube && sudo mv minikube /usr/local/bin/
+Start Minikube
+$ apt install conntrack
+$ minikube start --vm-driver=none
+$ minikube status
+To download helm
+curl -fsSL -o get_helm.sh
+https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+chmod 700 get_helm.sh
+./get_helm.sh
+-------------------------------task work demo------------------
+/eksinterview
+├── charts/
+├── Chart.yaml
+├── templates/
+│ ├── deployment.yaml
+│ ├── _helpers.tpl
+│ ├── hpa.yaml
+│ ├── ingress.yaml
+│ ├── NOTES.txt
+│ ├── serviceaccount.yaml
+│ ├── service.yaml
+│ └── tests
+│ └── test-connection.yaml
+└── values.yaml
+------------------------------------------
+We’ll follow this template, and create a new chart called eksinterviewcd
+~/environment
+helm create eksinterviewcd
+cd eksinterviewcd
+//Run the following code block to create a new Chart.yaml file
+cat <<EoF > ~/environment/eksinterview/Chart.yaml
+apiVersion: v2
+name: eksinterviewcd
+description: A Helm chart for EKS Workshop Microservices application
+version: 0.1.0
+appVersion: 1.0
+EoF
+//Next we’ll copy the manifest files for each of our microservices into the
+templates directory as servicename.yaml
+mkdir -p ~/environment/eksinterview/templates/deployment
+mkdir -p ~/environment/eksinterview/templates/service
+# Copy and rename frontend manifests
+cp ~/environment/eksinterview-frontend/kubernetes/deployment.yaml
+~/environment/eksinterview/templates/deployment/frontend.yaml
+cp ~/environment/eksinterview-frontend/kubernetes/service.yaml
+~/environment/eksinterview/templates/service/frontend.yaml
+# Copy and rename crystal manifests
+cp ~/environment/eksinterview-crystal/kubernetes/deployment.yaml
+~/environment/eksinterview/templates/deployment/crystal.yaml
+cp ~/environment/eksinterview-crystal/kubernetes/service.yaml
+~/environment/eksinterview/templates/service/crystal.yaml
+# Copy and rename nodejs manifests
+cp ~/environment/eksinterview-nodejs/kubernetes/deployment.yaml
+~/environment/eksinterview/templates/deployment/nodejs.yaml
+cp ~/environment/eksinterview-nodejs/kubernetes/service.yaml
+~/environment/eksinterview/templates/service/nodejs.yaml
+#Under spec, find replicas: 1 and replace with the following:
+replicas: {{ .Values.replicas }}
+# Under spec.template.spec.containers.image, replace the image with the correct
+template value.
+#Create a values.yaml file with our template defaults
+cat <<EoF > ~/environment/eksdemo/values.yaml
+# Default values for eksdemo.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+# Release-wide Values
+replicas: 3
+version: 'latest'
+# Service Specific Values
+nodejs:
+image: brentley/eksinterview-nodejs
+crystal:
+image: brentley/eksinterview-crystal
+frontend:
+image: brentley/eksinterview-frontend
+EoF
+#Use the dry-run flag to test our templates
+helm install --debug --dry-run workshop ~/environment/eksinterview
+#Deploy the chart
+helm install workshop ~/environment/eksinterview
+kubectl get svc,po,deploy
+#To test the service our eksinterview Chart created
+kubectl get svc ecsdemo-frontend -o
+jsonpath="{.status.loadBalancer.ingress[*].hostname}"; echo
+# Open values.yaml and modify the image name under nodejs.image
+# Deploy the updated demo application chart:
+helm upgrade workshop ~/environment/eksinterview
