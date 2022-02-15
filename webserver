@@ -1,0 +1,19 @@
+resource "aws_instance" "webserver"{
+ami = "ami-07a8c73a650069cf3"
+instance_type="t2.micro"
+availability_zone = "ap-south-1b"
+key_name=var.mykey
+security_groups = ["my_web_security"]
+user_data=<<-EOF
+#! /bin/bash
+sudo yum install git -y
+sudo yum install httpd -y
+sudo systemctl start httpd
+sudo systemctl enable httpd
+sudo mkfs -t ext4 /dev/sdd
+sudo mount /dev/sdd /var/www/html
+EOF
+tags={
+Name="webserver"
+}
+}
